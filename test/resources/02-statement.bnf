@@ -1,0 +1,143 @@
+/* **********************
+1. 单个语句
+2. 多个语句
+3. 语句块
+4. 空语句块
+5. 注释
+********************** */
+
+/* ********* lex ********* */
+
+%lex
+
+%%
+
+\/\/.*            /* skip comments */
+\/\*(.|\s)*\*\/   /* skip comments */
+\s+               /* skip whitespace */
+
+\d+     return 'NUMBER'
+[+\-]   return 'ADDITIVE_OPERATOR'
+[*/]    return 'MULTIPLICATIVE_OPERATOR'
+
+/lex
+
+/* ********* include ********* */
+
+%{
+function BinaryExpression(left, operator, right) {
+    return {
+        type:'BinaryExpression',
+        operator,
+        left,
+        right
+    };
+}
+
+%}
+
+/* ********* syntax ********* */
+
+%%
+
+Program
+    : StatementList
+        {
+            $$ = {
+                type: 'Program',
+                body: $1
+            }
+        }
+    ;
+
+StatementList
+    : Statement
+        { $$ = [$1]}
+    | StatementList Statement
+        { $1.push($2); $$ = $1}
+    ;
+
+Statement
+    : ExpressionStatement
+    | EmptyStatement
+    | BlockStatement
+    ;
+
+ExpressionStatement
+    : Expression ';'
+        {
+            $$ = {
+                type: 'ExpressionStatement',
+                expression: $1
+            }
+        }
+    ;
+
+EmptyStatement
+    : ';'
+        {
+            $$ = {
+                type: 'EmptyStatement'
+            }
+        }
+    ;
+
+BlockStatement
+    : '{' OptionalStatementList '}'
+        {
+            $$ = {
+                type: 'BlockStatement',
+                body: $2
+            }
+        }
+    ;
+
+OptionalStatementList
+    : StatementList
+    | /* empty */
+        {
+            $$ = []
+        }
+    ;
+
+Expression
+    : AdditivaExpression
+    ;
+
+AdditivaExpression
+    : AdditivaExpression ADDITIVE_OPERATOR MultiplicativeExpression
+        { $$ = BinaryExpression($1, $2, $3) }
+    | MultiplicativeExpression
+    ;
+
+MultiplicativeExpression
+    : MultiplicativeExpression MULTIPLICATIVE_OPERATOR PrimaryExpression
+        { $$ = BinaryExpression($1, $2, $3) }
+    | PrimaryExpression
+    ;
+
+PrimaryExpression
+    : Literal
+    | ParenthesizedExpression
+    ;
+
+Literal
+    : NumberLiteral
+    ;
+
+NumberLiteral
+    : NUMBER
+        {
+            $$ = {
+                type:'NumericLiteral',
+                value: Number($1)
+            }
+        }
+    ;
+
+ParenthesizedExpression
+    : '(' Expression ')'
+        {
+            $$ = $2
+        }
+    ;

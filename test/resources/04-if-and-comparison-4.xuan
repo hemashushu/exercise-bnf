@@ -1,0 +1,10 @@
+if (m)
+    if (n) 1; else 2;
+
+if (m) {
+    if (n) {
+        1;
+    }else {
+        2;
+    }
+}

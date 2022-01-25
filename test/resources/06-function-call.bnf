@@ -1,0 +1,412 @@
+/* **********************
+1. 一元运算符
+2. 调用函数
+********************** */
+
+/* ********* lex ********* */
+
+%lex
+
+%%
+
+\/\/.*              /* skip comments */
+\/\*(.|\s)*\*\/     /* skip comments */
+\s+                 /* skip whitespace */
+
+// keywords
+
+\bdef\b             return 'DEF'
+\breturn\b          return 'RETURN'
+\bif\b              return 'IF'
+\belse\b            return 'ELSE'
+\blet\b             return 'LET'
+
+// literal
+
+\btrue\b            return 'TRUE'
+\bfalse\b           return 'FALSE'
+\bnull\b            return 'NULL'
+
+\d+                 return 'NUMBER'
+\w+                 return 'IDENTIFIER'
+
+// operator
+
+\|\|                return 'LOGICAL_OR'             /* 优先级比 && 低 */
+\&\&                return 'LOGICAL_AND'            /* 优先级比 == 低 */
+[\=!]\=             return 'EQUALITY_OPERATOR'      /* 优先级比 >,>=,<,<= 低 */
+[><]\=?             return 'RELATIONAL_OPERATOR'    /* 优先级比 +,- 低 */
+
+\=                  return 'SIMPLE_ASSIGN'          /* 优先级比 || 低，注意正则匹配必须在 == 之后 */
+[*/+\-]\=           return 'COMPLEX_ASSIGN'         /* 优先级比 || 低 */
+
+[+\-]               return 'ADDITIVE_OPERATOR'      /* 优先级比 *,/ 低 */
+[*/]                return 'MULTIPLICATIVE_OPERATOR'
+
+/lex
+
+/* ********* include ********* */
+
+%{
+
+function IfStatement(test, consequent, alternate) {
+    return {
+        type: 'IfStatement',
+        test, consequent, alternate
+    };
+}
+
+function LogicalExpression(left, operator, right) {
+    return {
+        type:'LogicalExpression',
+        operator,
+        left,
+        right
+    };
+}
+
+function BinaryExpression(left, operator, right) {
+    return {
+        type:'BinaryExpression',
+        operator,
+        left,
+        right
+    };
+}
+
+function UnaryExpression(operator, argument) {
+    return {
+        type: 'UnaryExpression',
+        operator,
+        argument
+    };
+}
+
+function Literal(namePrefix, value) {
+    return {
+        type: `${namePrefix}Literal`,
+        value: value
+    };
+}
+
+%}
+
+/* ********* precedence ********* */
+
+/* 让 ELSE 优先级高于 （虚拟的） THEN */
+
+%nonassoc THEN
+%nonassoc ELSE
+
+/* ********* syntax ********* */
+
+%%
+
+Program                     // 程序入口
+    : StatementList
+        {
+            $$ = {
+                type: 'Program',
+                body: $1
+            }
+        }
+    ;
+
+StatementList
+    : Statement
+        { $$ = [$1]}
+    | StatementList Statement
+        { $1.push($2); $$ = $1}
+    ;
+
+Statement                   // 语句入口
+    : ExpressionStatement
+    | EmptyStatement
+    | BlockStatement
+    | FunctionDeclaration
+    | ReturnStatement
+    | IfStatement
+    | VariableStatement
+    ;
+
+VariableStatement
+    : VariableDeclarationListInit ';'
+        { $$ = $1 }
+    ;
+
+VariableDeclarationListInit
+    : LET VariableDeclarationList
+        {
+            $$ = {
+                type: 'VariableStatement',
+                declarations: $2
+            }
+        }
+    ;
+
+VariableDeclarationList
+    : VariableDeclaration
+        { $$ = [$1] }
+    | VariableDeclarationList ',' VariableDeclaration
+        { $1.push($3); $$ = $1}
+    ;
+
+VariableDeclaration
+    : Identifier OptionalVariableInitializer
+        {
+            $$ = {
+                type: 'VariableDeclaration',
+                id: $1,
+                init: $2
+            }
+        }
+    ;
+
+OptionalVariableInitializer
+    : VariableInitializer
+    | /* empty */
+        { $$ = null }
+    ;
+
+VariableInitializer
+    : SIMPLE_ASSIGN AssignmentExpression
+        { $$ = $2 }
+    ;
+
+IfStatement
+    : IF '(' Expression ')' Statement %prec THEN
+        { $$ = IfStatement($3, $5) }
+    | IF '(' Expression ')' Statement ELSE Statement
+        { $$ = IfStatement($3, $5, $7) }
+    ;
+
+FunctionDeclaration
+    : DEF Identifier '(' OptionalParameterList ')' BlockStatement
+        {
+            $$ = {
+                type: 'FunctionDeclaration',
+                name: $2,
+                params: $4,
+                body: $6,
+            }
+        }
+    ;
+
+OptionalParameterList
+    : FormalParameterList
+    | /* empty */
+        {
+            $$ = []
+        }
+    ;
+
+FormalParameterList
+    : Identifier
+        {
+            $$ = [$1]
+        }
+    | FormalParameterList ',' Identifier
+        {
+            $1.push($3); $$ = $1
+        }
+    ;
+
+ReturnStatement
+    : RETURN OptionalExpression ';'
+        {
+            $$ = {
+                type: 'ReturnStatement',
+                argument: $2
+            }
+        }
+    ;
+
+BlockStatement
+    : '{' OptionalStatementList '}'
+        {
+            $$ = {
+                type: 'BlockStatement',
+                body: $2
+            }
+        }
+    ;
+
+OptionalStatementList
+    : StatementList
+    | /* empty */
+        {
+            $$ = []
+        }
+    ;
+
+ExpressionStatement
+    : Expression ';'
+        {
+            $$ = {
+                type: 'ExpressionStatement',
+                expression: $1
+            }
+        }
+    ;
+
+EmptyStatement
+    : ';'
+        {
+            $$ = {
+                type: 'EmptyStatement'
+            }
+        }
+    ;
+
+Identifier
+    : IDENTIFIER
+        {
+            $$ = {
+                type: 'Identifier',
+                value: $1
+            }
+        }
+    ;
+
+OptionalExpression
+    : Expression
+    | /* empty */
+        {
+            $$ = null
+        }
+    ;
+
+Expression                  // 表达式入口
+    : AssignmentExpression
+    ;
+
+AssignmentExpression        // 优先级比 || 低
+    : LogicalORExpression
+    | LeftHandSideExpression AssignmentOperator AssignmentExpression
+        {
+            $$ = {
+                type: 'AssignmentExpression',
+                left: $1,
+                operator: $2,
+                right: $3
+            }
+        }
+    ;
+
+LeftHandSideExpression
+    : Identifier
+    ;
+
+AssignmentOperator
+    : SIMPLE_ASSIGN
+    | COMPLEX_ASSIGN
+    ;
+
+LogicalORExpression         // 优先级比 && 低
+    : LogicalANDExpression
+    | LogicalORExpression LOGICAL_OR LogicalANDExpression
+        { $$ = LogicalExpression($1, $2, $3) }
+    ;
+
+LogicalANDExpression        // 优先级比 == 低
+    : EqualityExpression
+    | LogicalANDExpression LOGICAL_AND EqualityExpression
+        { $$ = LogicalExpression($1, $2, $3) }
+    ;
+
+EqualityExpression          // 优先级比 >,>=,<,<= 低
+    : RelationalExpression
+    | EqualityExpression EQUALITY_OPERATOR RelationalExpression
+        { $$ = BinaryExpression($1, $2, $3) }
+    ;
+
+RelationalExpression        // 优先级比 +,- 低
+    : AdditivaExpression
+    | RelationalExpression RELATIONAL_OPERATOR AdditivaExpression
+        { $$ = BinaryExpression($1, $2, $3) }
+    ;
+
+AdditivaExpression          // 优先级比 *,/ 低
+    : AdditivaExpression ADDITIVE_OPERATOR MultiplicativeExpression
+        { $$ = BinaryExpression($1, $2, $3) }
+    | MultiplicativeExpression
+    ;
+
+MultiplicativeExpression
+    : MultiplicativeExpression MULTIPLICATIVE_OPERATOR UnaryExpression
+        { $$ = BinaryExpression($1, $2, $3) }
+    | UnaryExpression
+    ;
+
+UnaryExpression
+    : PrimaryExpression
+    | CallExpression
+    | ADDITIVE_OPERATOR UnaryExpression
+        { $$ = UnaryExpression($1, $2)}
+    ;
+
+CallExpression
+    : Callee Arguments
+        {
+            $$ = {
+                type: 'CallExpression',
+                callee: $1,
+                arguments: $2
+            }
+        }
+    ;
+
+/**
+ * 存在 foo(); 和 foo()(); 等形式
+ */
+Callee:
+    : LeftHandSideExpression
+    | CallExpression
+    ;
+
+Arguments
+    : '(' OptionalArgumentList ')'
+        { $$ = $2 }
+    ;
+
+
+
+PrimaryExpression           // 基础表达式，由字面量、标识符、表达式组等构成
+    : Literal
+    | Identifier
+    | ParenthesizedExpression
+    ;
+
+Literal
+    : NumberLiteral
+    | TrueLiteral
+    | FalseLiteral
+    | NullLiteral
+    ;
+
+NumberLiteral
+    : NUMBER
+        { $$ = Literal('Numeric', Number($1))}
+    ;
+
+TrueLiteral
+    : TRUE
+        { $$ = Literal('Boolean', true)}
+    ;
+
+FalseLiteral
+    : FALSE
+        { $$ = Literal('Boolean', false)}
+    ;
+
+NullLiteral
+    : NULL
+        { $$ = Literal('Null', null)}
+    ;
+
+ParenthesizedExpression
+    : '(' Expression ')'
+        {
+            $$ = $2
+        }
+    ;

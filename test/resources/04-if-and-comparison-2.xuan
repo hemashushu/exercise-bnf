@@ -1,0 +1,9 @@
+if (i == 0) return true;
+
+if (false)
+    return 0;
+
+if (true)
+    123;
+else
+    456;

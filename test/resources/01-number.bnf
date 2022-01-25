@@ -1,0 +1,79 @@
+/* **********************
+1. 能解析整数字面量（即 \d+）
+2. 能解析单行 + - * /
+3. 能区分 + - 和 * / 的优先级
+4. 能解析圆括号对
+********************** */
+
+/* ********* lex ********* */
+
+%lex
+
+%%
+
+\s+     /* skip whitespace */
+\d+     return 'NUMBER'
+[+\-]   return 'ADDITIVE_OPERATOR'
+[*/]    return 'MULTIPLICATIVE_OPERATOR'
+
+/lex
+
+/* ********* syntax ********* */
+
+%%
+
+Expression
+    : AdditivaExpression
+    ;
+
+AdditivaExpression
+    : AdditivaExpression ADDITIVE_OPERATOR MultiplicativeExpression
+        {
+            $$ = {
+                type: 'BinaryExpression',
+                operator: $2,
+                left: $1,
+                right: $3
+            }
+        }
+    | MultiplicativeExpression
+    ;
+
+MultiplicativeExpression
+    : MultiplicativeExpression MULTIPLICATIVE_OPERATOR PrimaryExpression
+        {
+            $$ = {
+                type: 'BinaryExpression',
+                operator: $2,
+                left: $1,
+                right: $3
+            }
+        }
+    | PrimaryExpression
+    ;
+
+PrimaryExpression
+    : Literal
+    | ParenthesizedExpression
+    ;
+
+Literal
+    : NumberLiteral
+    ;
+
+NumberLiteral
+    : NUMBER
+        {
+            $$ = {
+                type:'NumericLiteral',
+                value: Number($1)
+            }
+        }
+    ;
+
+ParenthesizedExpression
+    : '(' Expression ')'
+        {
+            $$ = $2
+        }
+    ;

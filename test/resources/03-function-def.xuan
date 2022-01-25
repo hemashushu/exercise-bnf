@@ -1,0 +1,16 @@
+// function declaring
+def one(i) {
+    return i+1;
+}
+
+def two(i, j) {
+    return i+j;
+}
+
+def zero() {
+    return;
+}
+
+def empty() {
+    //
+}

@@ -1,0 +1,27 @@
+{
+    "name": "exercise-bnf",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "test": "node test/validator.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/hemashushu/exercise-bnf.git"
+    },
+    "author": "Hemashushu <hippospark@gmail.com>",
+    "keywords": [
+        "xiaoxuan",
+        "xiaoxuan-lang"
+    ],
+    "license": "MPL-2.0",
+    "dependencies": {},
+    "devDependencies": {
+        "syntax-cli": "^0.1.22"
+    },
+    "bugs": {
+        "url": "https://github.com/hemashushu/exercise-bnf/issues"
+    },
+    "homepage": "https://github.com/hemashushu/exercise-bnf#readme"
+}
