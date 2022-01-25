@@ -12,8 +12,7 @@
     },
     "author": "Hemashushu <hippospark@gmail.com>",
     "keywords": [
-        "xiaoxuan",
-        "xiaoxuan-lang"
+        "bnf"
     ],
     "license": "MPL-2.0",
     "dependencies": {},
