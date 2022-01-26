@@ -1,0 +1,13 @@
+foo.length;
+a.b.c;
+foo[1];
+foo[i];
+foo["bar"];
+foo[1]["baz"];
+foo[num()];
+
+let a = foo.len;
+foo.len = b;
+
+Math.pow(2,3);
+foo[some()](a.b);

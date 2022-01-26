@@ -1,0 +1,4 @@
+"foo";
+"foo\"bar\"baz";
+let s = "foo";
+foo("bar");

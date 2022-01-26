@@ -1,0 +1,6 @@
+def outter() {
+    def inner() {
+        return b;
+    }
+    return a;
+}

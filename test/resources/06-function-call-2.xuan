@@ -1,0 +1,17 @@
+foo();
+foo(10);
+foo(x=20, 30, true);
+
+b=bar();
+c=10+one();
+
+-foo(1,2);
+
+def outer() {
+    def inner() {
+        return;
+    }
+    return inner;
+}
+
+outer()();
