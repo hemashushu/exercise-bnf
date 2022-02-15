@@ -363,7 +363,7 @@ Expression                  // 表达式入口
     : AssignmentExpression
     ;
 
-AssignmentExpression        // 优先级比 || 低
+AssignmentExpression        // = 优先级比 || 低
     : LogicalORExpression
     | LeftHandSideExpression AssignmentOperator AssignmentExpression
         {
@@ -381,37 +381,37 @@ AssignmentOperator
     | COMPLEX_ASSIGN
     ;
 
-LogicalORExpression         // 优先级比 && 低
+LogicalORExpression         // || 优先级比 && 低
     : LogicalANDExpression
     | LogicalORExpression LOGICAL_OR LogicalANDExpression
         { $$ = LogicalExpression($1, $2, $3) }
     ;
 
-LogicalANDExpression        // 优先级比 == 低
+LogicalANDExpression        // && 优先级比 == 低
     : EqualityExpression
     | LogicalANDExpression LOGICAL_AND EqualityExpression
         { $$ = LogicalExpression($1, $2, $3) }
     ;
 
-EqualityExpression          // 优先级比 >,>=,<,<= 低
+EqualityExpression          // == 优先级比 >, >=, <, <= 低
     : RelationalExpression
     | EqualityExpression EQUALITY_OPERATOR RelationalExpression
         { $$ = BinaryExpression($1, $2, $3) }
     ;
 
-RelationalExpression        // 优先级比 +,- 低
+RelationalExpression        // >, >=, <, <= 优先级比 +,- 低
     : AdditivaExpression
     | RelationalExpression RELATIONAL_OPERATOR AdditivaExpression
         { $$ = BinaryExpression($1, $2, $3) }
     ;
 
-AdditivaExpression          // 优先级比 *,/ 低
+AdditivaExpression          // +,- 优先级比 *,/ 低
     : AdditivaExpression ADDITIVE_OPERATOR MultiplicativeExpression
         { $$ = BinaryExpression($1, $2, $3) }
     | MultiplicativeExpression
     ;
 
-MultiplicativeExpression
+MultiplicativeExpression    // *,/ 优先级比 +,-(取正/负)/函数调用 低
     : MultiplicativeExpression MULTIPLICATIVE_OPERATOR UnaryExpression
         { $$ = BinaryExpression($1, $2, $3) }
     | UnaryExpression

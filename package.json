@@ -1,5 +1,5 @@
 {
-    "name": "exercise-bnf",
+    "name": "practice-bnf",
     "version": "1.0.0",
     "description": "",
     "main": "index.js",
@@ -8,7 +8,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/hemashushu/exercise-bnf.git"
+        "url": "git+https://github.com/hemashushu/practice-bnf.git"
     },
     "author": "Hemashushu <hippospark@gmail.com>",
     "keywords": [
@@ -20,7 +20,7 @@
         "syntax-cli": "^0.1.22"
     },
     "bugs": {
-        "url": "https://github.com/hemashushu/exercise-bnf/issues"
+        "url": "https://github.com/hemashushu/practice-bnf/issues"
     },
-    "homepage": "https://github.com/hemashushu/exercise-bnf#readme"
+    "homepage": "https://github.com/hemashushu/practice-bnf#readme"
 }
